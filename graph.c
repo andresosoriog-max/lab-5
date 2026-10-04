@@ -27,28 +27,69 @@ int is_equal_string(void *key1, void *key2) {
  * ========================================= */
 
 Graph* createGraph() {
+    Graph* grafo = (Graph*) malloc (sizeof(Graph));
+    if(!grafo) return NULL;
+    grafo ->adjacencyMap = map_create(is_equal_string);
+    return grafo;
     return NULL;
 }
 
 void addNode(Graph* g, const char* label) {
-    if (!g || !label) return;
+    if (!g || !label) return;;
+    if(map_search(g->adjacencyMap, (void*) label)!= NULL) return;
+    char* aux = strdup(label);
+    if(!aux) return;
+    List* lista = list_create();
+    map_insert(g->adjacencyMap,aux,lista);
 
 }
 
 void addEdge(Graph* g, const char* src, const char* dest, int weight) {
     if (!g || !src || !dest) return;
+    MapPair* aux = map_search(g-> adjacencyMap, (void*)src);
+    if(!aux){
+        addNode(g,src);
+        aux = map_search(g->adjacencyMap, (void*) src);
+        if(!aux) return;
+    }
+    List* lista = (List*) aux -> value;
+    Edge* edge = list_first(lista);
+    while(edge){
+        if(strcmp(edge->target, dest)== 0){
+            edge->weight=weight;
+            return;
+        }
+        edge = list_next(lista);
+    }Edge* nuevo = (Edge*) malloc (sizeof(Edge));
+    if(!nuevo) return;
+    nuevo->target =strdup(dest);
+    if(!nuevo->target){
+        free(nuevo);
+        return;
+    }
+    nuevo ->weight =weight;
+    list_pushBack(lista, nuevo);
 
 }
 
 List* getEdges(Graph* g, const char* label) {
     if (!g || !label) return NULL;
-
-    return NULL;
+    MapPair* aux = map_search(g->adjacencyMap, (void*)label);
+    if(!aux) return NULL;
+    return (List*) aux -> value;
 }
 
 int getWeight(Graph* g, const char* label1, const char* label2) {
     if (!g || !label1 || !label2) return -1;
-
+     MapPair * par = map_search(g->adjacencyMap, (void*)label1);
+    if(!par)return -1;
+    List *lista = par ->value;
+    Edge* pos = list_first(lista);
+    while(pos){
+        if(strcmp(pos ->target, label2) == 0){
+            return pos ->weight;
+        }pos = list_next(lista);
+    }
     // Si no existe el origen o terminamos de iterar sin encontrar el destino
     return -1; 
 }
